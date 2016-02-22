@@ -1,0 +1,2 @@
+obj\Release\ItService.g.xaml
+obj\Release\Apache.WorkFlow_ItService_BeforeInitializeComponentHelper.txt

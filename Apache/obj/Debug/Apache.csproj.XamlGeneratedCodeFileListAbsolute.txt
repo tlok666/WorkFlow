@@ -1,0 +1,4 @@
+obj\Debug\_Apache.g.cs
+obj\Debug\ItService.g.cs
+obj\Debug\Apache.WorkFlow_ItService_BeforeInitializeComponentHelper.cs
+D:\ftp\RightsApprovalProcess\RightsApprovalProcess\Apache\obj\Debug\Apache.WorkFlow_ItService_CompiledExpressionRoot.cs

@@ -1,0 +1,17 @@
+¶à¸öcontextÇ¨ÒÆ
+enable-migrations -ContextTypeName <DbContext-Name-with-Namespaces> -MigrationsDirectory:<Migrations-Directory-Name>
+Add-Migration -configuration <DbContext-Migrations-Configuration-Class-with-Namespaces> <Migrations-Name>
+Update-Database -configuration <DbContext-Migrations-Configuration-Class-with-Namespaces> -Verbose
+
+sys
+enable-migrations -ContextTypeName Apache.Models.ApplicationDbContext -MigrationsDirectory:ApplicationDbContexMigration
+Add-Migration -configuration Apache.ApplicationDbContexMigration.Configuration Initial
+Update-Database -configuration Apache.ApplicationDbContexMigration.Configuration -Verbose
+
+buss
+enable-migrations -ContextTypeName Apache.Models.BusinessDataContext -MigrationsDirectory:BusinessDataContextMigration
+Add-Migration -configuration Apache.BusinessDataContextMigration.Configuration Initial
+Update-Database -configuration Apache.BusinessDataContextMigration.Configuration -Verbose
+
+
+Enable-Migrations -ContextTypeName Apache.Models.ApplicationDbContext

@@ -1,0 +1,306 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - 流程创建</title>
+    @Styles.Render("~/Content/easyui")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/easyui")
+    <style type="text/css">
+        #fm {
+            margin: 0;
+            padding: 10px 30px;
+        }
+
+        .ftitle {
+            font-size: 14px;
+            font-weight: bold;
+            padding: 5px 0;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .fitem {
+            margin-top: 0px;
+            margin-bottom: 0px;
+            text-align: right;
+            padding-right:40px;
+        }
+
+            .fitem label {
+                display: inline-block;
+                width: 80px;
+            }
+
+            .fitem input {
+                width: 160px;
+            }
+        <!--
+        table {
+            border-collapse: collapse;
+        }
+        tr {
+            margin-left: 10px;
+        }
+        td {
+            border: solid 1px #ff0000;
+            padding-left:10px;
+        }
+        -->
+    </style>
+
+</head>
+<script language="javascript">
+    function convert(rows) {
+        function exists(rows, parentId) {
+            for (var i = 0; i < rows.length; i++) {
+                if (rows[i].id == parentId) return true;
+            }
+            return false;
+        }
+
+        var nodes = [];
+        // get the top level nodes
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            if (!exists(rows, row.parentId)) {
+                nodes.push({
+                    id: row.id,
+                    text: row.name
+                });
+            }
+        }
+
+        var toDo = [];
+        for (var i = 0; i < nodes.length; i++) {
+            toDo.push(nodes[i]);
+        }
+        while (toDo.length) {
+            var node = toDo.shift();	// the parent node
+            // get the children nodes
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                if (row.parentId == node.id) {
+                    var child = { id: row.id, text: row.name };
+                    if (node.children) {
+                        node.children.push(child);
+                    } else {
+                        node.children = [child];
+                    }
+                    toDo.push(child);
+                }
+            }
+        }
+        return nodes;
+    }
+
+    $(function () {
+        $('#ct').combotree({
+            url: '/ItService/orgTree',
+            loadFilter: function (rows) {
+                return convert(rows);
+            },
+             onLoadSuccess: function () {
+                    var t = $(this);
+                    t.tree("collapseAll");
+                }
+        });
+    });
+
+    $(function () {
+        var isitype = $('#isitype').combobox({                         //一级
+            url: '/ItService/getIsitype',
+            editable: false,
+            valueField: 'id',
+            textField: 'name',
+            onSelect: function (record) {
+
+                sub_isitype.combobox({
+                    editable: false,
+                    url: '/ItService/getSub_isitype?id=' + record.id,
+                    valueField: 'id',
+                    textField: 'name'
+                }).combobox('clear');
+
+                end_isiype.combobox({       //清除终极类别
+                    url: '/ItService/getEnd_isitype?id=-1',
+                    editable: false
+                }).combobox('clear');
+
+            }
+        });
+
+        var sub_isitype = $('#sub_isitype').combobox({               //二级
+            url: '/ItService/getSub_isitype?id=' + isitype.val(),
+            editable: false,
+            valueField: 'id',
+            textField: 'name',
+            onSelect: function (record) {
+                end_isiype.combobox({
+                    editable: false,
+                    url: '/ItService/getEnd_isitype?id=' + record.id,
+                    valueField: 'id',
+                    textField: 'name'
+                }).combobox('clear');
+            }
+        });
+
+        var end_isiype = $('#end_isitype').combobox({               //三级
+            url: '/ItService/getEnd_isitype?id=' + sub_isitype.val(),
+            editable: false,
+            valueField: 'id',
+            textField: 'name'
+        });
+
+    });
+
+</script>
+<body>
+    <div id="p" class="easyui-panel" title="申请单填写"
+         style="padding:10px;background:#fafafa;"
+         data-options="iconCls:'icon_it_write',collapsible:true,toolbar:'#toolbar'">
+        <div class="fitem">
+            <a href="#" class="easyui-linkbutton" iconcls="icon-ok" style="width:100px;height:23px" onclick="OpenPath()">提交</a>
+        </div>
+        <form id="fm" method="post" novalidate>
+            <table width="100%" align="center">
+                <caption>
+                    <strong>
+                        <font size="+2">
+                            龙源镇困难群众民政救助申请表
+                        </font>
+                    </strong>
+                </caption>
+                <tr>
+                    <td height="35"><label>申请人姓名</label></td>
+                    <td><input id="iapplicant" name="applicant" class="easyui-textbox" required="true" ></td>
+                    <td height="35"><label>身份证号码</label></td>
+                    <td><input id="iapplicant" name="applicant" class="easyui-textbox" required="true" ></td>
+                </tr>
+                <tr>
+                    <td height="35"><label>人员类别</label></td>
+                    <td colspan="3">
+                        <input name="SplitType" type="radio" class="easyui-validatebox" required="true" checked="checked" value="Split">重点优抚对象
+                        <input name="SplitType" type="radio" class="easyui-validatebox" required="true" value="Line" />低保对象
+                        <input name="SplitType" type="radio" class="easyui-validatebox" required="true" value="Line" />五保对象
+                        <input name="SplitType" type="radio" class="easyui-validatebox" required="true" value="Line" />孤儿
+                        <input name="SplitType" type="radio" class="easyui-validatebox" required="true" value="Line" />大病户
+                        <input name="SplitType" type="radio" class="easyui-validatebox" required="true" value="Line" />残疾人
+                        <input name="SplitType" type="radio" class="easyui-validatebox" required="true" value="Line" />其他
+                    </td>
+                </tr>
+
+                <tr>
+                    <td height="100"><label>申请事项</label></td>
+                    <td colspan="6">
+                        我叫<input id="iapplicant" name="applicant" class="easyui-textbox" required="true" style="width:90px">，
+                        性别:<input name="Sex" type="radio" class="easyui-validatebox" required="true" checked="checked" value="Split">男
+                        <input name="Sex" type="radio" class="easyui-validatebox" required="true" value="Line" />女，
+                        家住<input id="iapplicant" name="applicant" class="easyui-textbox" required="true" style="width:90px">村
+                        <input id="iapplicant" name="applicant" class="easyui-textbox" required="true" style="width:90px">组，
+                        家庭人口<input id="iapplicant" name="applicant" class="easyui-textbox" required="true" style="width:90px">人。<br/><br />
+                        因<input name="Charger" type="radio" class="easyui-validatebox" required="true" checked="checked" value="Split">家庭
+                        <input name="Charger" type="radio" class="easyui-validatebox" required="true" value="Line" />本人
+                        <input name="Reason" type="radio" class="easyui-validatebox" required="true" checked="checked" value="Split">自然灾害
+                        <input name="Reason" type="radio" class="easyui-validatebox" required="true" value="Line" />重大疾病
+                        <input name="Reason" type="radio" class="easyui-validatebox" required="true" value="Line" />残疾智障
+                        <input name="Reason" type="radio" class="easyui-validatebox" required="true" value="Line" />其他
+                        ，导致家庭困难。<br/><br />特申请政府给予
+                        <input id="iapplicant" name="applicant" class="easyui-textbox" required="true" style="width:90px">救助
+                        <input id="iapplicant" name="applicant" class="easyui-textbox" required="true" style="width:90px">元。
+                    </td>
+                </tr>
+                <tr>
+                    <td height="100"><label>困难原因</label></td>
+                    <td colspan="6"><input id="iDealwithpeopleName" name="DealwithpeopleName" class="easyui-textbox" data-options="multiline:true" style="height:80px;width:600px"></td>
+                </tr>
+                <tr>
+                    <td height="100"><label>村级意见:</label></td>
+                    <td colspan="6"><input id="iDealwithpeopleName" name="DealwithpeopleName" class="easyui-textbox" data-options="multiline:true" style="height:80px;width:600px"></td>
+                </tr>
+                <tr>
+                    <td height="100"><label>镇级意见:</label></td>
+                    <td colspan="6"><input id="isolution" name="solution" class="easyui-textbox" data-options="multiline:true" style="height:80px;width:600px"></td>
+
+                </tr>
+                <tr>
+                    <td height="100"><label>县级意见:</label></td>
+                    <td colspan="6"><input id="isolution" name="solution" class="easyui-textbox" data-options="multiline:true" style="height:80px;width:600px"></td>
+
+                </tr>
+            </table>
+         
+        </form>
+
+    </div>
+
+
+        <div id="dlg-path" class="easyui-dialog" closed="true" buttons="#dlg-path-buttons" modal="true" style="padding:15px 15px">
+            <div class="easyui-layout" style="width:280px;height:320px;padding:0px 0px;border:0px">
+                <div data-options="region:'center'" style="padding: 0px; border: 0px">
+                    <select id="lselect" size="10" name="state" style="width: 275px; height: 300px; border-color: #95B8E7"></select>
+                </div>
+            </div>
+        </div>
+        <div id="dlg-path-buttons">
+            <a href="javascript:void(0)" class="easyui-linkbutton c6" iconcls="icon-ok" onclick="saveWorkFlow()" style="width:90px">提交</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" iconcls="icon-cancel" onclick="javascript: $('#dlg-path').dialog('close')" style="width:90px">取消</a>
+        </div>
+        <script language="javascript">
+            var instanceId;
+            function OpenPath() {
+                //var node = $('#dg').datagrid('getSelected');
+                //roleid = node.ID;
+                if ($('#fm').form('validate')) {
+                    $('#dlg-path').dialog('open').dialog('setTitle', '选择提交环节');
+
+                    $("#lselect").empty();
+                    $.getJSON("/ItService/CreateWorkFlow?time="+new Date(), function (data) {
+                        instanceId = data.instanceId;
+                        CurrentState = data.CurrentState;
+                        $.each(data.rows, function (i, item) {
+                            $('#lselect').append($("<option/>", {
+                                value: item.ID,
+                                text: item.Name
+                            }));
+                        });
+                    });
+                }
+            }
+
+            function saveWorkFlow() {
+                if ($("#lselect option:selected").text() == "") {
+                    $.messager.show({
+                        title: '错误',
+                        msg: '请选择下一环节'
+                    })
+                    return;
+                }
+                $('#fm').form('submit', {
+                    url: '/ItService/DrafterToNextState?instanceId=' + instanceId + "&NextLink=" + $("#lselect option:selected").text(),
+                    
+                    onSubmit: function () {
+                        return $(this).form('validate');
+                    },
+                    success: function (result) {
+                        var result = eval('(' + result + ')');
+                        if (result.errorMsg) {
+                            $.messager.show({
+                                title: 'Error',
+                                msg: result.errorMsg
+                            });
+                        } else {
+                            window.location.href = "/ItService/SubmitSuccess";
+                        }
+                    }
+                });
+            }
+        </script>
+</body>
+</html>
